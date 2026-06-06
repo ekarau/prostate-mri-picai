@@ -22,15 +22,20 @@ them.
 
 | Task | Metric | This subset | Reference |
 |------|--------|-------------|-----------|
-| Anatomy — TZ | mean Dice | see `step3` output | 0.88 (prostate158) |
-| Anatomy — PZ | mean Dice | see `step3` output | 0.75 (prostate158) |
+| Anatomy — TZ | Dice (mean / median) | 0.73 / 0.86 | 0.88 (prostate158) |
+| Anatomy — PZ | Dice (mean / median) | 0.77 / 0.81 | 0.75 (prostate158) |
 | Lesion | PI-CAI score (AP+AUROC)/2 | 0.90 | 0.61 (full test set) |
 | Lesion | case-level Sens / Spec | 1.00 / 1.00 | — |
 
-The lesion numbers sit above the published reference, but that is expected: the
-cohort is tiny (10 positive + 10 negative) and hand-balanced, and the baseline
-output is binary, so the patient-level AUROC is measured at a single operating
-point. The presentation discusses this caveat.
+Two things worth noting. For anatomy, the TZ median (0.86) is close to the
+prostate158 reference, but the mean drops to 0.73 because the model fails
+outright on 3 of the 20 cases (TZ Dice = 0) — a real cross-dataset
+generalization gap that the failure-case slide highlights. PZ holds up better
+and even edges past its reference. On the lesion side the numbers sit above the
+published reference, but that is expected: the cohort is tiny (10 positive +
+10 negative) and hand-balanced, and the baseline output is binary, so the
+patient-level AUROC is measured at a single operating point. The presentation
+discusses both caveats.
 
 ## Repository layout
 
