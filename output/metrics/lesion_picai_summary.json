@@ -1,0 +1,7 @@
+{
+  "AP": 0.81,
+  "AUROC": 1.0,
+  "PICAI_score": 0.905,
+  "n_cases": 20,
+  "note": "Bosma22a binary masks treated as detection maps; AUROC is at a single operating point."
+}

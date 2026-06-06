@@ -23,14 +23,12 @@ external/
 *.npz
 
 # ============================================================
-# Data / output directories
+# Raw data directories (large / licensed — never committed)
 # ============================================================
 input/
 images/
 workdir/
-output/
 data/
-predictions/
 checkpoints/
 
 # ============================================================
@@ -83,3 +81,10 @@ temp/
 
 # MS Office lock / autosave files (e.g. ~$presentation.pptx)
 ~$*
+
+# ============================================================
+# Pipeline outputs — kept in the repo (~8 MB total).
+# Re-includes the output/ tree, overriding the *.nii.gz rule above.
+# ============================================================
+!output/
+!output/**
