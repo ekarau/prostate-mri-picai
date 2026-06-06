@@ -1,14 +1,8 @@
 # ============================================================
-# Third-party repositories (referenced via README, not vendored)
+# Third-party repos, datasets and tutorial notebooks (not vendored)
+# Downloaded locally into external/, referenced from README
 # ============================================================
-picai_baseline-main/
-picai_labels-main/
-prostate_mri_anatomy/
-
-# ============================================================
-# Pretrained third-party tutorial notebooks
-# ============================================================
-TCIA_PROSTATEx_Prostate_MRI_Anatomy_Model.ipynb
+external/
 
 # ============================================================
 # Large data, models, archives
@@ -86,3 +80,6 @@ desktop.ini
 *.tmp
 tmp/
 temp/
+
+# MS Office lock / autosave files (e.g. ~$presentation.pptx)
+~$*

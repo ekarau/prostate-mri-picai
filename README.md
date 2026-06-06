@@ -1,107 +1,86 @@
-# Prostate MRI csPCa Detection — PI-CAI Re-implementation
+# Prostate MRI — PI-CAI Baseline Evaluation
 
-Re-implementation and evaluation of the official PI-CAI Challenge baseline
-algorithms for clinically significant prostate cancer (csPCa) detection on
-multi-parametric MRI, together with anatomical zonal segmentation using the
-MONAI Model Zoo bundle by Adams & Bressem (2022).
+A small study around the [PI-CAI Challenge](https://pi-cai.grand-challenge.org/):
+take the published baseline models for prostate MRI, run them on a 20-patient
+subset, and measure how well they do against the reference annotations. The
+results feed a short presentation (slides under `presentation/`).
 
-This repository tracks an interview project: download the PI-CAI dataset,
-run the baseline detection/segmentation models, and showcase the data,
-ground-truth annotations, and model performance.
+The project covers two separate tasks:
 
----
+- **Anatomical zonal segmentation** — the pretrained MONAI `prostate_mri_anatomy`
+  bundle (Adams & Bressem, 2022) splitting the gland into the transitional zone
+  (TZ) and peripheral zone (PZ).
+- **csPCa lesion detection** — the PI-CAI U-Net baseline (Bosma et al., 2022)
+  flagging clinically significant prostate cancer on multi-parametric MRI
+  (T2W + ADC + high b-value DWI).
 
-## Goals
+Everything runs on Google Colab against data kept in Google Drive. I did not
+re-train anything — the point was to evaluate the released models, not to beat
+them.
 
-The deliverables targeted by this project:
+## Results (20-patient PI-CAI subset)
 
-1. Download and inspect the PI-CAI Challenge dataset (Public Training and
-   Development).
-2. Run / re-use the baseline detection models (U-Net, nnU-Net) released by
-   the PI-CAI organizers.
-3. Visualize the imaging data and ground-truth segmentations.
-4. Report segmentation performance for prostate anatomical zones
-   (transitional zone, peripheral zone).
-5. Report lesion segmentation / detection performance for csPCa.
+| Task | Metric | This subset | Reference |
+|------|--------|-------------|-----------|
+| Anatomy — TZ | mean Dice | see `step3` output | 0.88 (prostate158) |
+| Anatomy — PZ | mean Dice | see `step3` output | 0.75 (prostate158) |
+| Lesion | PI-CAI score (AP+AUROC)/2 | 0.90 | 0.61 (full test set) |
+| Lesion | case-level Sens / Spec | 1.00 / 1.00 | — |
 
----
+The lesion numbers sit above the published reference, but that is expected: the
+cohort is tiny (10 positive + 10 negative) and hand-balanced, and the baseline
+output is binary, so the patient-level AUROC is measured at a single operating
+point. The presentation discusses this caveat.
 
-## External References
-
-This project consumes — but does not re-host — the following third-party
-artifacts. Reproduce locally by cloning / downloading them into the
-project root:
-
-| Component | Source |
-|-----------|--------|
-| PI-CAI baseline models | <https://github.com/DIAGNijmegen/picai_baseline> |
-| PI-CAI labels & clinical info | <https://github.com/DIAGNijmegen/picai_labels> |
-| PI-CAI imaging data (Public Training) | <https://zenodo.org/records/6624726> |
-| Prostate anatomy MONAI bundle | <https://github.com/Project-MONAI/model-zoo> (`prostate_mri_anatomy`) |
-| prostate158 dataset (anatomy model training) | <https://doi.org/10.5281/zenodo.6481141> |
-
----
-
-## Project Structure
+## Repository layout
 
 ```
-Prostate_MRI_Project/
-├── README.md                  # this file
-├── COLAB_SETUP.md             # Colab + Drive setup guide
-├── step1_setup.ipynb          # environment bootstrap (Colab)
-├── step2_download_data.ipynb  # (planned) Zenodo download
-├── step3_anatomy_inference.ipynb   # (planned) zonal segmentation
-├── step4_lesion_inference.ipynb    # (planned) csPCa detection
-├── step5_visualizations.ipynb      # (planned) figures for slides
-│
-├── picai_baseline-main/   # (gitignored) clone of DIAGNijmegen/picai_baseline
-├── picai_labels-main/     # (gitignored) clone of DIAGNijmegen/picai_labels
-├── prostate_mri_anatomy/  # (gitignored) MONAI bundle (pretrained model.pt)
-├── input/                 # (gitignored) PI-CAI imaging data
-├── workdir/               # (gitignored) preprocessing outputs
-└── output/                # (gitignored) predictions, metrics, figures
+.
+├── notebooks/                 # the actual pipeline, run in order on Colab
+│   ├── step1_setup.ipynb          environment + Drive bootstrap
+│   ├── step2_download_data.ipynb   PI-CAI fold 0 download, 20-case subset
+│   ├── step3_anatomy_inference.ipynb   zonal segmentation + Dice
+│   ├── step4_lesion_inference.ipynb    csPCa detection + PI-CAI metrics
+│   └── step5_visualizations.ipynb      failure cases + summary figures
+├── docs/
+│   └── COLAB_SETUP.md         Colab + Drive setup walkthrough
+├── presentation/
+│   └── *.pptx                 the slide deck
+├── requirements.txt
+└── external/                  third-party repos/data (not tracked — see below)
 ```
 
----
+## Getting the external data
+
+`external/` is gitignored — it holds large third-party repositories and the
+imaging data, which are not re-hosted here. Download them into `external/`:
+
+| What | Where from |
+|------|------------|
+| PI-CAI baseline code | https://github.com/DIAGNijmegen/picai_baseline |
+| PI-CAI labels + clinical info | https://github.com/DIAGNijmegen/picai_labels |
+| PI-CAI imaging (fold 0) | https://zenodo.org/records/6624726 |
+| `prostate_mri_anatomy` MONAI bundle | https://github.com/Project-MONAI/model-zoo |
+| prostate158 (anatomy model source) | https://doi.org/10.5281/zenodo.6481141 |
+
+Then follow [`docs/COLAB_SETUP.md`](docs/COLAB_SETUP.md) to put everything in
+the right place on Drive and run the notebooks `step1` → `step5`.
 
 ## Environment
 
-- **Compute:** Google Colab (T4 GPU, 16 GB VRAM) backed by Google Drive
-- **Local:** Windows 11, PowerShell, Python 3.11, PyTorch 2.x, MONAI 1.3.x
-- **Key libraries:** MONAI, SimpleITK, nibabel, `picai_baseline`,
-  `picai_eval`, `picai_prep`
+Colab T4 GPU + Google Drive. Key libraries pinned in `requirements.txt`
+(notably `numpy<2` and `monai==1.3.2`, which have to match — newer NumPy breaks
+the MONAI transforms).
 
-Detailed setup steps are in [`COLAB_SETUP.md`](COLAB_SETUP.md).
+## Credits
 
----
+This project is built entirely on third-party models and data — full credit
+goes to the original authors. I only wrote the evaluation notebooks and the
+slides. For the anatomy model:
 
-## Roadmap
+> Adams, L. C., & Bressem, K. K. (2022). Prostate158 — An expert-annotated 3T
+> MRI dataset and algorithm for prostate cancer detection. *Computers in Biology
+> and Medicine*, 148, 105817.
 
-| Phase | Notebook | Status |
-|-------|----------|--------|
-| 1 — Environment setup | `step1_setup.ipynb` | in progress |
-| 2 — Data download | `step2_download_data.ipynb` | planned |
-| 3 — Anatomical segmentation | `step3_anatomy_inference.ipynb` | planned |
-| 4 — Lesion detection | `step4_lesion_inference.ipynb` | planned |
-| 5 — Visualizations / slides | `step5_visualizations.ipynb` | planned |
-
----
-
-## License
-
-The notebooks and documentation in this repository are released under the
-MIT License (see `LICENSE`). The third-party repositories and datasets
-referenced above retain their own licenses; consult the upstream sources.
-
----
-
-## Citation
-
-If you build on the PI-CAI baseline or labels, please cite the original
-organizers (see the upstream repositories for the canonical citation).
-
-For the anatomy model:
-
-> Adams, L. C., & Bressem, K. K. (2022). *Prostate158 — An expert-annotated
-> 3T MRI dataset and algorithm for prostate cancer detection.* Computers in
-> Biology and Medicine, 148, 105817. <https://doi.org/10.1016/j.compbiomed.2022.105817>
+For the PI-CAI baseline and labels, cite the original organizers (see the
+upstream repositories listed above).
